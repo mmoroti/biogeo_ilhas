@@ -102,12 +102,9 @@ name_phy$new_name <- name_phy$new_name %>% str_replace_all("Platymantis_macrops"
 name_phy$new_name <- name_phy$new_name %>% str_replace_all("Amietophrynus_buchneri","Sclerophrys_buchneri") %>% str_replace_all("Amietophrynus_camerunensis", "Sclerophrys_camerunensis") %>% str_replace_all("Amietophrynus_funereus","Sclerophrys_funerea") %>% str_replace_all("Amietophrynus_gracilipes","Sclerophrys_gracilipes") %>% str_replace_all("Amietophrynus_gutturalis","Sclerophrys_gutturalis") %>% str_replace_all("Amietophrynus_kassasii","Sclerophrys_kassasii") %>% str_replace_all("Amietophrynus_latifrons","Sclerophrys_latifrons") %>% str_replace_all("Amietophrynus_maculatus","Sclerophrys_maculata") %>% str_replace_all("Amietophrynus_regularis","Sclerophrys_regularis") %>% str_replace_all("Amietophrynus_superciliaris","Sclerophrys_superciliaris") %>% str_replace_all("Amietophrynus_togoensis","Sclerophrys_togoensis" ) %>% str_replace_all("Amietophrynus_tuberosus","Sclerophrys_tuberosa") %>% str_replace_all("Amietophrynus_xeros","Sclerophrys_xeros") %>% str_replace_all("Calluella", "Glyphoglossus") %>% str_replace_all("Glyphoglossus_guttulata", "Glyphoglossus_guttulatus") %>% str_replace_all("Glyphoglossus_flava", "Glyphoglossus_flavus") %>% str_replace_all("Hylarana_albolabris","Amnirana_albolabris") %>% str_replace_all("Hylarana_amnicola","Amnirana_amnicola") %>% str_replace_all("Hylarana_galamensis","Amnirana_galamensis") %>% str_replace_all("Hylarana_lepus","Amnirana_lepus") %>% str_replace_all("Hylarana_occidentalis","Amnirana_occidentalis") %>% str_replace_all("Hylarana_baramica","Pulchrana_baramica") %>% str_replace_all("Hylarana_debussyi","Pulchrana_debussyi") %>% str_replace_all("Hylarana_glandulosa","Pulchrana_glandulosa") %>% str_replace_all("Hylarana_grandocula","Pulchrana_grandocula") %>% str_replace_all("Hylarana_laterimaculata","Pulchrana_laterimaculata") %>% str_replace_all("Hylarana_mangyanum","Pulchrana_mangyanum") %>% str_replace_all("Hylarana_melanomenta","Pulchrana_melanomenta") %>% str_replace_all("Hylarana_moellendorffi","Pulchrana_moellendorffi") %>% str_replace_all("Hylarana_picturata","Pulchrana_picturata") %>% str_replace_all("Hylarana_siberu","Pulchrana_siberu") %>% str_replace_all("Hylarana_signata","Pulchrana_signata") %>% str_replace_all("Hylarana_similis","Pulchrana_similis")%>% str_replace_all("Oreophryne_nana","Aphantophryne_nana") %>% str_replace_all("Pseudocallulops_eurydactylus","Asterophrys_eurydactyla") %>% str_replace_all("Pseudocallulops_pullifer","Asterophrys_pullifer") %>% str_replace_all("Metamagnusia_marani","Asterophrys_marani") %>% str_replace_all("Metamagnusia_slateri","Asterophrys_slateri") %>% str_replace_all("Hylarana_nicobariensis","Bijurana_nicobariensis") %>% str_replace_all("Chiromantis_nongkhorensis","Chirixalus_nongkhorensis") %>% str_replace_all("Oxydactyla_alpestris","Copiula_alpestris") %>% str_replace_all("Austrochaperina_guttata","Copiula_guttata") %>% str_replace_all("Huia_masonii","Wijayarana_masonii") %>% str_replace_all("Huia_melasma","Wijayarana_melasma") %>% str_replace_all("Huia_modiglianii","Wijayarana_modiglianii") %>% str_replace_all("Huia_sumatrana","Wijayarana_sumatrana") %>% str_replace_all("Rugosa_emelianjovi","Glandirana_emeljanovi") %>% str_replace_all("Rugosa_rugosa","Glandirana_rugosa") %>% str_replace_all("Ramanella_obscura","Uperodon_obscurus") %>% str_replace_all("	
 Ramanella_nagaoi","Uperodon_nagaoi") %>% str_replace_all("Ramanella_palmata","Uperodon_palmatus") %>% str_replace_all("Ramanella_variegata","Uperodon_variegatus") %>% str_replace_all("Kaloula_taprobanica","Uperodon_taprobanicus") %>% str_replace_all("Hylarana_cubitalis","Sylvirana_cubitalis") %>% str_replace_all("Hylarana_guentheri","Sylvirana_guentheri") %>% str_replace_all("Hylarana_maosonensis","Sylvirana_maosonensis") %>% str_replace_all("Hylarana_mortenseni","Sylvirana_mortenseni") %>% str_replace_all("Hylarana_nigrovittata","Sylvirana_nigrovittata") %>% str_replace_all("Hylarana_spinulosa","Sylvirana_spinulosa") %>% str_replace_all("Phyllomedusa_hypochondrialis","Pithecopus_hypochondrialis") 
 
-name_phy$new_name <- name_phy$new_name %>% str_replace_all("Hylarana_malabarica","Hydrophylax_malabaricus") %>% str_replace_all("Hylarana_leptoglossa","Hydrophylax_leptoglossa") %>% str_replace_all("Hylarana_gracilis","Hydrophylax_gracilis") %>% str_replace_all("Mantophryne_infulata","Hylophorbus_infulatus") %>% str_replace_all("Chlorolius_koehleri","Hyperolius_koehleri") %>% str_replace_all("Hylarana_aurantiaca","Indosylvirana_aurantiaca") %>% str_replace_all("Hylarana_temporalis","Indosylvirana_temporalis") %>% str_replace_all("Leptolalax_pictus","Leptobrachella_picta") %>% str_replace_all("Limnonectes_rhacoda","Limnonectes_rhacodus") %>% str_replace_all("Nyctimystes_rueppelli","Litoria_rueppelli")
+name_phy$new_name <- name_phy$new_name %>% str_replace_all("Hylarana_malabarica","Hydrophylax_malabaricus") %>% str_replace_all("Hylarana_leptoglossa","Hydrophylax_leptoglossa") %>% str_replace_all("Hylarana_gracilis","Hydrophylax_gracilis") %>% str_replace_all("Mantophryne_infulata","Hylophorbus_infulatus") %>% str_replace_all("Chlorolius_koehleri","Hyperolius_koehleri") %>% str_replace_all("Hylarana_aurantiaca","Indosylvirana_aurantiaca") %>% str_replace_all("Hylarana_temporalis","Indosylvirana_temporalis") %>% str_replace_all("Leptolalax_pictus","Leptobrachella_picta") %>% str_replace_all("Limnonectes_rhacoda","Limnonectes_rhacodus") %>% str_replace_all("Nyctimystes_rueppelli","Litoria_rueppelli") %>% str_replace_all("Pherohapsis_menziesi","Mantophryne_menziesi") %>% str_replace_all("Microhyla_erythropoda","Micryletta_erythropoda") %>% str_replace_all("Fejervarya_syhadrensis","Minervarya_syhadrensis") %>% str_replace_all("Microhyla_perparva","Nanohyla_perparva") %>% str_replace_all("Microhyla_petrigena","Nanohyla_petrigena") %>% str_replace_all("Babina_adenopleura","Nidirana_adenopleura") %>% str_replace_all("Babina_hainanensis","Nidirana_hainanensis") %>% str_replace_all("Babina_okinavana","Nidirana_okinavana") %>% str_replace_all("Litoria_infrafrenata","Nyctimystes_infrafrenatus") %>% str_replace_all("Litoria_sauroni","Nyctimystes_sauroni") %>% str_replace_all("Nyctimystes_tyleri","Litoria_tyleri") %>% str_replace_all("Hylarana_arfaki","Papurana_arfaki") %>% str_replace_all("Ramanella_nagaoi","Uperodon_nagaoi") %>% str_replace_all("Phrynoidis_aspera","Phrynoidis_asper") %>% str_replace_all("Cornufer_guentheri","Platymantis_guentheri") %>% str_replace_all("Rhombophryne_alluaudi","Plethodontohyla_alluaudi") %>% str_replace_all("Pedostibes_everetti","Rentapia_everetti") %>% str_replace_all("Pedostibes_hosii","Rentapia_hosii") %>% str_replace_all("Chiromantis_hansenae","Rohanixalus_hansenae") %>% str_replace_all("Chiromantis_vittatus","Rohanixalus_vittatus") %>% str_replace_all("Genyophryne_thomsoni","Sphenophryne_thomsoni")
 
 amphibia_phy$tip.label <- name_phy$new_name
-
-View(name_phy)
-
 # Checking species match
 options(max.print=200)
 match.phylo.comm(amphibia_phy,short_anura_islands)
@@ -115,11 +112,11 @@ match.phylo.comm(amphibia_phy,short_anura_islands)
 #Prune with phylogeny Pyron and Wiens consensus
 phy_anura_islands <- prune.sample(short_anura_islands, amphibia_phy) 
 
-phy_anura_islands # 2217 spp
+phy_anura_islands # 2236 spp
 
 # ncol(short_anura_islands) #2248
 #quantas espécies perdemos?
-2248-2217 # 31
+2248-2236 # 12 spp
 
 # Phylogeny anuran islands
 plot(phy_anura_islands, type="fan",show.tip.label = FALSE)
@@ -129,19 +126,24 @@ write.tree(phy_anura_islands, file = "anura_islands.tre")
 ###
 # "Anodonthyla_boulengeri","Megophrys_carinense" nomes inválidos segundo Frost
 
-missing.in.phy <- c("Sclerophrys_pentoni","Sclerophrys_tihamica","Trachycephalus_typhonius","Anodonthyla_boulengeri","Cornufer_heffernani","Cornufer_hedigeri","Fejervarya_pulla","Megophrys_carinense",)      
+# espécie duplicada na composição e nos traits  e litoria tyleri
+missing.in.phy <- c("Anodonthyla_boulengeri","Cornufer_guentheri","Cornufer_hedigeri","Cornufer_heffernani","Fejervarya_pulla","Megophrys_carinense","Nyctimystes_tyleri","Rhacophorus_rhyssocephalus","Sanguirana_mearnsi", "Sclerophrys_pentoni","Sclerophrys_tihamica","Trachycephalus_typhonius")
 
- %>% str_replace_all("Pherohapsis_menziesi","Mantophryne_menziesi") %>% str_replace_all() %>% str_replace_all() %>% str_replace_all() %>% str_replace_all() %>% str_replace_all() %>% str_replace_all() %>% str_replace_all() %>% str_replace_all() %>% str_replace_all() %>% str_replace_all() %>% str_replace_all() %>% str_replace_all() %>% str_replace_all() 
+phy_community_anura <- short_anura_islands[,!(names(short_anura_islands)%in% missing.in.phy)]
 
-[29] "Micryletta_erythropoda"     "Minervarya_syhadrensis"    
-[31] "Nanohyla_perparva"          "Nanohyla_petrigena"        
-[33] "Nidirana_adenopleura"       "Nidirana_hainanensis"      
-[35] "Nidirana_okinavana"         "Nyctimystes_infrafrenatus" 
-[37] "Nyctimystes_sauroni"        "Nyctimystes_tyleri"        
-[39] "Papurana_arfaki"            "Phrynoidis_asper"          
-     "Platymantis_guentheri"     
-[43] "Plethodontohyla_alluaudi"   "Rentapia_everetti"         
-[45] "Rentapia_hosii"             "Rhacophorus_rhyssocephalus"
-[47] "Rohanixalus_hansenae"       "Rohanixalus_vittatus"      
-[49] "Sanguirana_mearnsi"         "Sclerophrys_pentoni"       
-[51] "Sclerophrys_tihamica"       "Sphenophryne_thomsoni"
+
+# Join lista da comunidade e filogenia com os traits
+# Arrumando para linhas
+anuran_list_phy <- phy_community_anura %>%
+  gather(key="Species",value="count", Abavorana_luctuosa:Zhangixalus_viridis) %>% distinct(Species, .keep_all = TRUE)
+nrow(anuran_list_phy) #2503 spp composição de espécies
+nrow(anura_traits_select) # 2249 spp traits
+
+# Left join: espécies que estão no x mantidas e agrupa com os correspiondentes de y 
+phy_community_traits <- left_join(anuran_list_phy, anura_traits_select, by="Species") %>% select(-count)
+vis_miss(anura_with_traits)
+
+#Data
+ncol(phy_community_anura) #2236 species community
+phy_anura_islands #2236 species phylogeny
+nrow(phy_community_traits) #2236 species traits
