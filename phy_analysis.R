@@ -131,7 +131,6 @@ missing.in.phy <- c("Anodonthyla_boulengeri","Cornufer_guentheri","Cornufer_hedi
 
 phy_community_anura <- short_anura_islands[,!(names(short_anura_islands)%in% missing.in.phy)]
 
-
 # Join lista da comunidade e filogenia com os traits
 # Arrumando para linhas
 anuran_list_phy <- phy_community_anura %>%
