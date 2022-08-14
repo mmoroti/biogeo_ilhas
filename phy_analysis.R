@@ -25,18 +25,25 @@ View(batcomm$ab)
 
 # Herein, we preparing data 
 # community data 
+#dir()
+#anura_islands_orig <- as_tibble(read.csv2("comunidades_ilhas.csv", sep=","))
+#head(anura_islands_orig)
+#anura_islands <- anura_islands_orig %>% select(-X, -OBJECTID_1) #copy
+
+# Sun Aug 14 11:00:01 2022 ------------------------------
+# using dataset without 'ilhas fluviais'
 dir()
-anura_islands_orig <- as_tibble(read.csv2("comunidades_ilhas.csv", sep=","))
-head(anura_islands_orig)
-anura_islands <- anura_islands_orig %>% select(-X, -OBJECTID_1) #copy
+matrix_islands <- as_tibble(read.csv2("matrix_islands_ok.csv", sep=","))
+head(matrix_islands) # 2329
+anura_islands_ok <- matrix_islands %>% select(-X, -name_ID)  
 
 #check data
-head(anura_islands_orig) # 2505 columns with island id  
-head(anura_islands) # 2503 spp without island id
+head(matrix_islands) # 2505 columns with island id  
+head(anura_islands_ok) # 2503 spp without island id
 
 # we use copy data without island id columns 
-nrow(anura_islands) # 2289 islands 
-ncol(anura_islands) # 2503 anuran islands spp.
+nrow(anura_islands_ok) # 1499 islands 
+ncol(anura_islands_ok) # 2327 anuran islands spp.
 
 # traits data
 anura_traits <- read.csv2("functional_anura.csv", sep=",") 
@@ -53,10 +60,12 @@ anura_traits_select <- anura_traits %>% select(traits)
 #Conferindo quais espécies da lista possuem traits
 # Lista para join
 # Arrumando para linhas
-anuran_list <- anura_islands %>%
+View(anura_islands_ok)
+
+anuran_list <- anura_islands_ok %>%
   gather(key="Species",value="count", Abavorana_luctuosa:Zhangixalus_yinggelingensis) %>% distinct(Species, .keep_all = TRUE)
 
-nrow(anuran_list) #2503 spp composição de espécies
+nrow(anuran_list) #2327 spp composição de espécies
 nrow(anura_traits_select) # 2249 spp traits
 
 # Left join: espécies que estão no x mantidas e agrupa com os correspiondentes de y 
@@ -67,18 +76,14 @@ vis_miss(anura_with_traits)
 # litter_size_max continuous trait - 68% missing data.  
 # View(anura_traits_select)
 
-# Saving traits data
-write.csv2(anura_with_traits, "anura_islands_traits.csv", sep=",")
-?write.csv
-
 # Anti join: espécies que estão no x, mas não estão no y (x,y)
 anura_without_traits <- anti_join(anuran_list, anura_traits_select, by="Species")
 nrow(anura_without_traits) # 255 spp.
 
 #Retirando espécies da comunidade que não estão nos traits
 rem.col.list <- anura_without_traits$Species
-short_anura_islands <- anura_islands[,!(names(anura_islands)%in% rem.col.list)]
-ncol(short_anura_islands) #2248 species with traits
+short_anura_islands <- anura_islands_ok[,!(names(anura_islands_ok)%in% rem.col.list)]
+ncol(short_anura_islands) #2080 species with traits
 
 ###---
 # phylogenetic data 
@@ -104,6 +109,8 @@ Ramanella_nagaoi","Uperodon_nagaoi") %>% str_replace_all("Ramanella_palmata","Up
 
 name_phy$new_name <- name_phy$new_name %>% str_replace_all("Hylarana_malabarica","Hydrophylax_malabaricus") %>% str_replace_all("Hylarana_leptoglossa","Hydrophylax_leptoglossa") %>% str_replace_all("Hylarana_gracilis","Hydrophylax_gracilis") %>% str_replace_all("Mantophryne_infulata","Hylophorbus_infulatus") %>% str_replace_all("Chlorolius_koehleri","Hyperolius_koehleri") %>% str_replace_all("Hylarana_aurantiaca","Indosylvirana_aurantiaca") %>% str_replace_all("Hylarana_temporalis","Indosylvirana_temporalis") %>% str_replace_all("Leptolalax_pictus","Leptobrachella_picta") %>% str_replace_all("Limnonectes_rhacoda","Limnonectes_rhacodus") %>% str_replace_all("Nyctimystes_rueppelli","Litoria_rueppelli") %>% str_replace_all("Pherohapsis_menziesi","Mantophryne_menziesi") %>% str_replace_all("Microhyla_erythropoda","Micryletta_erythropoda") %>% str_replace_all("Fejervarya_syhadrensis","Minervarya_syhadrensis") %>% str_replace_all("Microhyla_perparva","Nanohyla_perparva") %>% str_replace_all("Microhyla_petrigena","Nanohyla_petrigena") %>% str_replace_all("Babina_adenopleura","Nidirana_adenopleura") %>% str_replace_all("Babina_hainanensis","Nidirana_hainanensis") %>% str_replace_all("Babina_okinavana","Nidirana_okinavana") %>% str_replace_all("Litoria_infrafrenata","Nyctimystes_infrafrenatus") %>% str_replace_all("Litoria_sauroni","Nyctimystes_sauroni") %>% str_replace_all("Nyctimystes_tyleri","Litoria_tyleri") %>% str_replace_all("Hylarana_arfaki","Papurana_arfaki") %>% str_replace_all("Ramanella_nagaoi","Uperodon_nagaoi") %>% str_replace_all("Phrynoidis_aspera","Phrynoidis_asper") %>% str_replace_all("Cornufer_guentheri","Platymantis_guentheri") %>% str_replace_all("Rhombophryne_alluaudi","Plethodontohyla_alluaudi") %>% str_replace_all("Pedostibes_everetti","Rentapia_everetti") %>% str_replace_all("Pedostibes_hosii","Rentapia_hosii") %>% str_replace_all("Chiromantis_hansenae","Rohanixalus_hansenae") %>% str_replace_all("Chiromantis_vittatus","Rohanixalus_vittatus") %>% str_replace_all("Genyophryne_thomsoni","Sphenophryne_thomsoni")
 
+View(name_phy)
+
 amphibia_phy$tip.label <- name_phy$new_name
 # Checking species match
 options(max.print=200)
@@ -112,11 +119,11 @@ match.phylo.comm(amphibia_phy,short_anura_islands)
 #Prune with phylogeny Pyron and Wiens consensus
 phy_anura_islands <- prune.sample(short_anura_islands, amphibia_phy) 
 
-phy_anura_islands # 2236 spp
+phy_anura_islands # 2068 spp
 
-# ncol(short_anura_islands) #2248
+ncol(short_anura_islands) #2080
 #quantas espécies perdemos?
-2248-2236 # 12 spp
+2080-2068 # 12 spp
 
 # Phylogeny anuran islands
 plot(phy_anura_islands, type="fan",show.tip.label = FALSE)
@@ -135,7 +142,7 @@ phy_community_anura <- short_anura_islands[,!(names(short_anura_islands)%in% mis
 # Arrumando para linhas
 anuran_list_phy <- phy_community_anura %>%
   gather(key="Species",value="count", Abavorana_luctuosa:Zhangixalus_viridis) %>% distinct(Species, .keep_all = TRUE)
-nrow(anuran_list_phy) #2503 spp composição de espécies
+nrow(anuran_list_phy) #2068 spp composição de espécies
 nrow(anura_traits_select) # 2249 spp traits
 
 # Left join: espécies que estão no x mantidas e agrupa com os correspiondentes de y 
@@ -143,6 +150,24 @@ phy_community_traits <- left_join(anuran_list_phy, anura_traits_select, by="Spec
 vis_miss(anura_with_traits)
 
 #Data
-ncol(phy_community_anura) #2236 species community
-phy_anura_islands #2236 species phylogeny
-nrow(phy_community_traits) #2236 species traits
+ncol(phy_community_anura) #2068 species community
+phy_anura_islands #2068 species phylogeny
+nrow(phy_community_traits) #2068 species traits
+
+# Saving traits data
+write.csv2(phy_community_traits, "anura_islands_traits.csv", sep=",")
+write.csv2(phy_community_anura, "anura_islands_matrix.csv", sep=",")
+
+# Sun Aug 14 16:33:06 2022 ------------------------------
+# Example
+library(phyloregion)
+data(africa)
+head(africa$comm)
+View(africa$comm)
+
+rownames(phy_community_anura) <- matrix_islands$name_ID
+teste <- as.matrix(phy_community_anura)
+
+pe <- phylo_endemism(teste, phy_anura_islands)
+head(pe)
+write.table(pe, "phylogenetic_endemism.txt", sep=",")
