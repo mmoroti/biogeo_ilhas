@@ -33,7 +33,11 @@ View(batcomm$ab)
 # Sun Aug 14 11:00:01 2022 ------------------------------
 # using dataset without 'ilhas fluviais'
 dir()
-matrix_islands <- as_tibble(read.csv2("matrix_islands_ok.csv", sep=","))
+matrix_islands <- as_tibble(read.csv2("first_dataset/matrix_islands_ok.csv", sep=",", fileEncoding='UTF-8'))
+#removing name
+matrix_islands$name_ID <- gsub("\\_..*","",matrix_islands$name_ID)
+
+###
 head(matrix_islands) # 2329
 anura_islands_ok <- matrix_islands %>% select(-X, -name_ID)  
 
@@ -161,13 +165,13 @@ write.csv2(phy_community_anura, "anura_islands_matrix.csv", sep=",")
 View(phy_community_anura)
 
 # Sun Aug 14 16:33:06 2022 ------------------------------
-community_with_id <- cbind(id = matrix_islands$name_ID, phy_community_anura)
+community_with_id <- mutate(phy_community_anura,id = matrix_islands$name_ID,)
 
 # islands without anurans
 index <- rowSums(phy_community_anura) #checking islands without anura spp
 View(as.data.frame(index))
 
-rem.lines <- c("17651_Safara", "18539_Calagnaan", "18930_Vinh Thuc", "22423_NA", "3381_Mayotte", "3663_Sajid", "5167_Tigre", "9445_Isola Favignana")
+rem.lines <- c("17651", "18539", "18930", "22423", "3381", "3663", "5167", "9445")
 
 community_without_zero <- community_with_id[!(community_with_id$id %in% rem.lines), ]
 
