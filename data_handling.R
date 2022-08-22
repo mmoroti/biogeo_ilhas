@@ -51,12 +51,12 @@ ncol(anura_islands_ok) # 2327 anuran islands spp.
 
 # traits data
 dir()
-anura_traits <- read.csv2("functional_anura.csv", sep=",") 
+anura_traits <- read.csv2("first_dataset/functional_anura.csv", sep=",") 
 names(anura_traits) 
 dim(anura_traits) #2249 spp and 34 traits
 
 # selecting traits for our analysis
-traits <- c("Species", "Ter","Fos","Aqu","Arb", "Dir", "Lar", "Viv", "Litter_size_max_n")
+traits <- c("Species", "Ter","Fos","Aqu","Arb", "Dir", "Lar", "Viv", "Body_size_mm")
 anura_traits_select <- anura_traits %>% select(traits)
 
 # Thu Aug 11 12:05:59 2022 ------------------------------
@@ -158,11 +158,27 @@ ncol(phy_community_anura) #2068 species community
 phy_anura_islands #2068 species phylogeny
 nrow(phy_community_traits) #2068 species traits
 
+# Mon Aug 22 13:47:24 2022 ------------------------------
+# taking off offspring size and adding body size
+
+# traits raoni
+traits_anura_raoni <- openxlsx::read.xlsx("first_dataset/functional_traits_raoni.xlsx")
+names(traits_anura_raoni)
+traits_anura_raoni <- as_tibble(traits_anura_raoni) %>% select("Species","Body_size_mm", "Fos","Ter","Aqu","Arb", "Dir","Lar","Viv")
+
+# Join with list data
+traits_anura_islands <- left_join(anuran_list_phy, traits_anura_raoni, by="Species") %>% select(-count)
+vis_miss(traits_anura_islands)
+
 # Saving traits data
 write.csv2(phy_community_traits, "anura_islands_traits.csv", sep=",")
 write.csv2(phy_community_anura, "anura_islands_matrix.csv", sep=",")
-
 View(phy_community_anura)
+
+# Mon Aug 22 14:00:28 2022 ------------------------------
+# saving traits_anura_islands
+dir()
+write.csv2(traits_anura_islands, "anura_traits_raoni.csv", sep=",")
 
 # Sun Aug 14 16:33:06 2022 ------------------------------
 community_with_id <- mutate(phy_community_anura,id = matrix_islands$name_ID,)
