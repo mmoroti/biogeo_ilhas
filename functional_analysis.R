@@ -1,13 +1,7 @@
 # Mon Aug 22 14:09:37 2022 ------------------------------
-# functional analysis for anunun biogegraphy
-library(FD)
-library(tidyverse)
-library(picante)
-library(RRphylo)
-library(Rphylopars)
-library(phytools)
+# functional analysis for anunan biogegraphy
 
-# loading data
+# functions
 # Imputation body_size
 # I modified the function fitGeospiza so that it receives the two arguments (phy, trait) that will go in the model. The function's new name is fit_modified2. In fit_modified2, I included the aicw function from the geiger package to also return us the AICw in the model comparison.
 #---- CREATE a FUNCTION to COMPARE EVOLUTION MODELS
@@ -82,101 +76,187 @@ fit_modified2=function(phy, trait){
   return(res_aicc)
 }
 
+# packages
+library(FD)
+library(tidyverse)
+library(picante)
+library(RRphylo)
+library(Rphylopars)
+library(phytools)
+library(geiger)
+
+# loading data
+#Composition data
+dir()
+composition <- as_tibble(read.csv2("anura_islands_without0.csv"))
+# put names in rows
+View(composition)
+composition.select <- composition %>% select(-X, -id)
+rownames(composition.select) <- as.character(composition$id) 
+
+# phylogeny
+phy_anura_islands <- ape::read.tree("anura_islands.tre")
+phy_anura_islands #2068
+
+# traits 
+dir()
+traits_anura <- as_tibble(openxlsx::read.xlsx("anura_traits_raoni_2.xlsx")) %>% select(-X1,-X11,-X12)
+visdat::vis_miss(traits_anura)
+
+# preparing continuous variable 'body_size_mm' for imputation data. 11,61% are missing data.
+body_size <- as.data.frame(traits_anura %>% select(Species, Body_size_mm) %>% rename(species = Species))
+body_size$Body_size_mm <- log10(body_size$Body_size_mm)
+
+visdat::vis_miss(body_size)
+
+#rename rownames
+body_size_to_input <- body_size %>% select(-Species)
+rownames(body_size_to_input) <- body_size$Species
+
+# We need to remove NA's to do the selection for best fit model of trait evolution
+body_size_withoutna <- remove_missing(body_size, vars="Body_size_mm") #240 spp removed
+# preparing dataset
+body_size_without_rownames <- body_size_withoutna %>% select(-Species)
+rownames(body_size_without_rownames) <- body_size_withoutna$Species 
+View(body_size_without_rownames)
+
+# Colnames with species ID - This proceding is necessary for prune.sample function
+body_amphi_trans <- t(body_size_withoutna)
+
+# prune sample with phylogeny
+phy_body <- prune.sample(body_amphi_trans,phy_anura_islands)
+phy_body # 1828 tips
+ #1828 spp
+
 # Aqui inicia o processo de seleção de modelos evolutivos para os atributos, precisamos usar os dados sem NA's depois fazemos a imputação. 
 # Calculing the best fit evolution model
 # Function fit_modified2 is required
 ###--- Anura
 # The Phylogeny needs to rooted and ultrametric
-anura_phy_ultra_2 <- force.ultrametric(anura_phy_body)
-amphibia_phy_rooted_2 <- ape::multi2di(anura_phy_ultra_2)
+is.ultrametric(phy_body)
+anura_phy_ultra <- force.ultrametric(phy_body)
+anura_phy_ultra <- ape::multi2di(anura_phy_ultra)
 
 # Body models
-body_anura_model <- fit_modified2(amphibia_phy_rooted_2, svl_amph_sem)
-body_anura_model # dAICc OU model - AICw 1.0 OU
+body_anura_model <- fit_modified2(anura_phy_ultra, body_size_without_rownames)
+
+body_anura_model # OU is the best model
 
 #--- after selection evolution model
-anura_phy_ultra <- force.ultrametric(anura_phy)
-amphibia_phy_rooted <- ape::multi2di(anura_phy_ultra)
+anura_phy_ultra_full <- force.ultrametric(phy_anura_islands)
+amphibia_phy_rooted <- ape::multi2di(anura_phy_ultra_full)
 is.ultrametric(amphibia_phy_rooted)
 
-p_OU <- phylopars(trait_data = short_amphibia_traits, tree = amphibia_phy_rooted,  pheno_error = TRUE,phylo_correlated = TRUE,pheno_correlated = TRUE, model="mvOU")
+p_OU <- phylopars(trait_data = body_size, tree = amphibia_phy_rooted,  pheno_error = TRUE,phylo_correlated = TRUE,pheno_correlated = TRUE, model="mvOU")
 
-amphibia_phy_rooted
+phy_bodysize <- as.data.frame(p_OU$anc_recon[1:2068,]) # Data with imputed species means
+p_OU$anc_var[1:2068,] # Variances for each estimate
 
-p_OU$anc_recon[1:20,] # Data with imputed species means
-p_OU$anc_var[1:20,] # Variances for each estimate
+# Join phylogenetic imputation in datase
+body_input <- as_tibble(cbind(body_size_input = phy_bodysize$`p_OU$anc_recon[1:2068, ]`, Species = rownames(phy_bodysize)))
+body_input$body_size_input <- as.numeric(body_input$body_size_input)
 
-p_OU$anc_recon[1:20,] - sqrt(p_BM$anc_var[1:20,])*1.96 # Lower 95% CI
-p_OU$anc_recon[1:20,] + sqrt(p_BM$anc_var[1:20,])*1.96 # Upper 95% CI
-View(p_OU$anc_recon)
+# Join without NA's in body size
+traits_input <- left_join(traits_anura, body_input, by="Species")  %>% select(-Body_size_mm)
+hist(traits_input$body_size_input)#normal distribution
 
 # removing missing data in development mode and habitat
+visdat::vis_miss(traits_input)
 
+# We only 4.1% percent missing data
+# 3.29% habitat (fos,ter,aqu,arb)
+# 8.03% development
 
+traits_without_na <- remove_missing(traits_input, vars=names(traits_input))
+nrow(traits_without_na) # 1879 species with functional data
+
+# Wed Aug 24 15:10:03 2022 ------------------------------
 # functional metrics 
-# Primeiro, precisamos preparar as variáveis
-#Atividade circadiana
-atividade <- traits.amphibia.phy %>% 
-  select(sp, Diu, Crepu, Noc) %>%
+names(traits_without_na)
+# development 
+development <- traits_without_na %>% 
+  select(Species, Dir, Lar, Viv) %>%
   mutate_at(vars(2:4), list(~replace(., is.na(.), 0)))
-atividade <- as.tibble(atividade)
 
-atividade <- column_to_rownames(as.data.frame(atividade),var = "sp")
+development <- column_to_rownames(as.data.frame(development),var = "Species")
 
-dist_ativ <- prep.binary(atividade, col.blocks = 3, labels = "atividade_circadiana")
+dist_development <- prep.binary(development, col.blocks = 3, labels = "development")
 
-# Habitat
-names(traits.amphibia.phy)
-habitat <- traits.amphibia.phy %>% 
-  select(sp, Fos, Ter, Aqu, Arb) %>%
+# habitat
+habitat <- traits_without_na %>% 
+  select(Species, Fos, Ter, Aqu, Arb) %>%
   mutate_at(vars(2:5), list(~replace(., is.na(.), 0)))
 habitat
 
-habitat <- as.tibble(habitat)
-
 habitat <- column_to_rownames(as.data.frame(habitat), 
-                              var = "sp")
+                              var = "Species")
+
 dist_habitat <- prep.binary(habitat, col.blocks = 4, labels = "habitat")
 
 # Transformando para numeric traitss
-sum(is.na(traits.amphibia.phy$Body_size_mm)) # 0 NA's
-traits.amphibia.phy <- traits.amphibia.phy %>% 
-  mutate_at("Body_size_mm", list(as.numeric))
-class(traits.amphibia.phy$Body_size_mm)
+sum(is.na(traits_without_na$body_size_input)) # 0 NA's
+
+#traits.amphibia.phy <- traits.amphibia.phy %>% 
+#  mutate_at("Body_size_mm", list(as.numeric))
+#class(traits.amphibia.phy$Body_size_mm)
 
 #Explorando body size
-ggplot(traits.amphibia.phy, aes(Body_size_mm))+
-  geom_density()
+ggplot(traits_without_na, aes(body_size_input))+
+  geom_density() #normal distribution
 
-bodysize <- data.frame(BodySize=log(traits.amphibia.phy$Body_size_mm))
-rownames(bodysize) <- traits.amphibia.phy$sp
+bodysize <- data.frame(body_size = traits_without_na$body_size_input)
+rownames(bodysize) <- traits_without_na$Species
 head(bodysize)
+
+# conferindo
 nrow(bodysize)
-
-#Explorando range extension
-sum(is.na(traits.amphibia.phy$area_m))#ok
-
-range.ext <- data.frame(range.extension=(as.numeric(as.character(traits.amphibia.phy$area_m))))
-
-#Unindo traits quantitativos em um conjunto de dados
-quant.traits.amphi <- cbind(bodysize, range.ext)
-sum(is.na(quant.traits.amphi)) #pronto!
+nrow(habitat)
+nrow(development)
 
 #Now, let's finally calculate the pair-wise trait distance matrix using the Gower distance coefficient as implemented in the package `ade4'
-trait.dist <- dist.ktab(ktab.list.df(list(dist_ativ, dist_habitat, as.data.frame(quant.traits.amphi))), type = c("B","B","Q"), scan=TRUE)
+trait.dist <- dist.ktab(ktab.list.df(list(dist_habitat,dist_development, bodysize)), type = c("B","D","Q"), scan=TRUE)
+
+?dist.ktab
+is.euclid(sqrt(trait.dist))
+
 #10 = S2 coefficient of GOWER & LEGENDRE for multi-choice traits
 #1 = Euclidean for quantitative traits
 
-?dist.ktab
-
-is.euclid(trait.dist)#TRUE =D
-sum(as.matrix(is.na(trait.dist)))#no NAs :)
-
 ####
-# Wed Mar 31 16:11:06 2021 ------------------------------
-# Calculating Functional Diversity metrics
-disp.func.amphibia <- fdisp(trait.dist, as.matrix(list.amphibia.phy))
+# Wed Aug 24 15:25:33 2022 ------------------------------
 
-FDis_metric_amphibia <- data.frame(id=grid_ma$id, FDis=disp.func.amphibia$FDis)
+# At first, we need to construct our composition matrix only species with functional data available 
+# Tirando da lista
+list <- anti_join(traits_anura,traits_without_na, by="Species")
 
-# save csv file with functional metrics 
+list.remove <- list$Species
+#Removendo da composição (alteração do nome de . para _)
+composition_functional <- composition.select[,!(names(composition.select)%in% list.remove)]
+ncol(composition_functional)
+
+# identificando ilha com zero espécies
+teste <- cbind(id=composition$id, composition_functional)
+View(teste[,-1])
+rownames(teste) <- composition$id
+
+# check match
+View(as.data.frame(rowSums(teste[,-1])))
+View(as.data.frame(rowSums(composition_functional))) # one community has 0 spp, because this in this functional analysis we removed more one community (island id 6938).
+
+composition_functional <- composition_functional[-1244,]
+composition_id <- teste[-1244,]
+View(composition_id)
+# Now, we calculating Functional Diversity metrics
+disp.func.amphibia <- fdisp(trait.dist, as.matrix(composition_functional),  tol = 1e-07)
+disp.func.amphibia
+
+# Histograma
+disp.func.amphibia$FDis
+hist(disp.func.amphibia$FDis)
+
+# join data frame with id islands
+FDis_metric_amphibia <- data.frame(id=composition_id$id, FDis=disp.func.amphibia$FDis) #save csv file with functional metrics 
+View(FDis_metric_amphibia)
+# fdis
+dir()
+write.csv2(FDis_metric_amphibia, "fdis_islands.csv")
