@@ -56,6 +56,7 @@ points(d$optimal$k, d$optimal$ev, pch = 21, bg = "red", type = "h")
 ###---
 # Mon Aug 15 14:50:12 2022 ------------------------------
 # Loading shapefile world islands 
+dir()
 shape <- sf::st_read("Anura_big islands_5000.shp")
 shape <- sf:::as_Spatial(shape) 
 

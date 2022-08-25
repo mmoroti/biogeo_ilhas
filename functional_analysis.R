@@ -96,7 +96,7 @@ rownames(composition.select) <- as.character(composition$id)
 
 # phylogeny
 phy_anura_islands <- ape::read.tree("anura_islands.tre")
-phy_anura_islands #2068
+phy_anura_islands #1986
 
 # traits 
 dir()
@@ -105,28 +105,32 @@ visdat::vis_miss(traits_anura)
 
 # preparing continuous variable 'body_size_mm' for imputation data. 11,61% are missing data.
 body_size <- as.data.frame(traits_anura %>% select(Species, Body_size_mm) %>% rename(species = Species))
+
 body_size$Body_size_mm <- log10(body_size$Body_size_mm)
 
-visdat::vis_miss(body_size)
-
 #rename rownames
-body_size_to_input <- body_size %>% select(-Species)
+body_size_to_input <- body_size %>% select(-species)
+
 rownames(body_size_to_input) <- body_size$Species
 
 # We need to remove NA's to do the selection for best fit model of trait evolution
 body_size_withoutna <- remove_missing(body_size, vars="Body_size_mm") #240 spp removed
+nrow(body_size_withoutna) #1828
 # preparing dataset
-body_size_without_rownames <- body_size_withoutna %>% select(-Species)
-rownames(body_size_without_rownames) <- body_size_withoutna$Species 
+body_size_without_rownames <- body_size_withoutna %>% select(-species)
+rownames(body_size_without_rownames) <- body_size_withoutna$species 
 View(body_size_without_rownames)
 
 # Colnames with species ID - This proceding is necessary for prune.sample function
-body_amphi_trans <- t(body_size_withoutna)
-
+body_amphi_trans <- t(body_size_without_rownames)
+colnames(body_amphi_trans) <- body_amphi_trans[1,] 
+View(body_amphi_trans)
+ncol(body_amphi_trans)
 # prune sample with phylogeny
 phy_body <- prune.sample(body_amphi_trans,phy_anura_islands)
 phy_body # 1828 tips
- #1828 spp
+nrow(body_size_without_rownames) #1828
+#1828 spp
 
 # Aqui inicia o processo de seleção de modelos evolutivos para os atributos, precisamos usar os dados sem NA's depois fazemos a imputação. 
 # Calculing the best fit evolution model
@@ -157,18 +161,28 @@ body_input <- as_tibble(cbind(body_size_input = phy_bodysize$`p_OU$anc_recon[1:2
 body_input$body_size_input <- as.numeric(body_input$body_size_input)
 
 # Join without NA's in body size
-traits_input <- left_join(traits_anura, body_input, by="Species")  %>% select(-Body_size_mm)
+traits_input <- left_join(body_input, traits_anura, by="Species")  %>% select(-Body_size_mm)
 hist(traits_input$body_size_input)#normal distribution
+
+# Thu Aug 25 18:22:18 2022 ------------------------------
+# traits with new composition 
+# Arrumando para linhas
+anuran_list <- composition.select %>%
+  gather(key="Species",value="count", Abavorana_luctuosa:Zhangixalus_viridis) %>% distinct(Species, .keep_all = TRUE)
+nrow(anuran_list)
+
+traits_input <- left_join(anuran_list, traits_input, by="Species")  %>% select(-count)
+View(traits_input)
 
 # removing missing data in development mode and habitat
 visdat::vis_miss(traits_input)
 
 # We only 4.1% percent missing data
-# 3.29% habitat (fos,ter,aqu,arb)
-# 8.03% development
+# 3.42% habitat (fos,ter,aqu,arb)
+# 8.31% development
 
 traits_without_na <- remove_missing(traits_input, vars=names(traits_input))
-nrow(traits_without_na) # 1879 species with functional data
+nrow(traits_without_na) # 1798 species with functional data
 
 # Wed Aug 24 15:10:03 2022 ------------------------------
 # functional metrics 
@@ -232,19 +246,19 @@ list <- anti_join(traits_anura,traits_without_na, by="Species")
 list.remove <- list$Species
 #Removendo da composição (alteração do nome de . para _)
 composition_functional <- composition.select[,!(names(composition.select)%in% list.remove)]
-ncol(composition_functional)
+ncol(composition_functional) #1798
 
 # identificando ilha com zero espécies
 teste <- cbind(id=composition$id, composition_functional)
-View(teste[,-1])
+View(teste)
 rownames(teste) <- composition$id
 
 # check match
 View(as.data.frame(rowSums(teste[,-1])))
 View(as.data.frame(rowSums(composition_functional))) # one community has 0 spp, because this in this functional analysis we removed more one community (island id 6938).
 
-composition_functional <- composition_functional[-1244,]
-composition_id <- teste[-1244,]
+composition_functional <- composition_functional[-720,]
+composition_id <- teste[-720,]
 View(composition_id)
 # Now, we calculating Functional Diversity metrics
 disp.func.amphibia <- fdisp(trait.dist, as.matrix(composition_functional),  tol = 1e-07)
