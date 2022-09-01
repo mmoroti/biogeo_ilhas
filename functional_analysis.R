@@ -90,20 +90,21 @@ library(geiger)
 dir()
 composition <- as_tibble(read.csv2("anura_islands_without0.csv"))
 # put names in rows
-View(composition)
+#View(composition)
 composition.select <- composition %>% select(-X, -id)
 rownames(composition.select) <- as.character(composition$id) 
-
+View(as.data.frame(rowSums(composition.select)))
 # phylogeny
 phy_anura_islands <- ape::read.tree("anura_islands.tre")
 phy_anura_islands #1986
 
 # traits 
 dir()
-traits_anura <- as_tibble(openxlsx::read.xlsx("anura_traits_raoni_2.xlsx")) %>% select(-X1,-X11,-X12)
+traits_anura <- as_tibble(read.csv2("anura_islands_traits.csv")) %>% select(-X)
 visdat::vis_miss(traits_anura)
+nrow(traits_anura)
 
-# preparing continuous variable 'body_size_mm' for imputation data. 11,61% are missing data.
+# preparing continuous variable 'body_size_mm' for imputation data. 12,37% are missing data.
 body_size <- as.data.frame(traits_anura %>% select(Species, Body_size_mm) %>% rename(species = Species))
 
 body_size$Body_size_mm <- log10(body_size$Body_size_mm)
@@ -112,10 +113,11 @@ body_size$Body_size_mm <- log10(body_size$Body_size_mm)
 body_size_to_input <- body_size %>% select(-species)
 
 rownames(body_size_to_input) <- body_size$Species
+nrow(body_size_to_input)
 
 # We need to remove NA's to do the selection for best fit model of trait evolution
-body_size_withoutna <- remove_missing(body_size, vars="Body_size_mm") #240 spp removed
-nrow(body_size_withoutna) #1828
+body_size_withoutna <- remove_missing(body_size, vars="Body_size_mm") #238 spp removed
+View(body_size_withoutna) #1686
 # preparing dataset
 body_size_without_rownames <- body_size_withoutna %>% select(-species)
 rownames(body_size_without_rownames) <- body_size_withoutna$species 
@@ -123,14 +125,13 @@ View(body_size_without_rownames)
 
 # Colnames with species ID - This proceding is necessary for prune.sample function
 body_amphi_trans <- t(body_size_without_rownames)
-colnames(body_amphi_trans) <- body_amphi_trans[1,] 
+#colnames(body_amphi_trans) <- body_amphi_trans[1,] 
 View(body_amphi_trans)
 ncol(body_amphi_trans)
 # prune sample with phylogeny
 phy_body <- prune.sample(body_amphi_trans,phy_anura_islands)
-phy_body # 1828 tips
-nrow(body_size_without_rownames) #1828
-#1828 spp
+phy_body # 1686 tips
+nrow(body_size_without_rownames) #1686 spp
 
 # Aqui inicia o processo de seleção de modelos evolutivos para os atributos, precisamos usar os dados sem NA's depois fazemos a imputação. 
 # Calculing the best fit evolution model
@@ -152,12 +153,11 @@ amphibia_phy_rooted <- ape::multi2di(anura_phy_ultra_full)
 is.ultrametric(amphibia_phy_rooted)
 
 p_OU <- phylopars(trait_data = body_size, tree = amphibia_phy_rooted,  pheno_error = TRUE,phylo_correlated = TRUE,pheno_correlated = TRUE, model="mvOU")
-
-phy_bodysize <- as.data.frame(p_OU$anc_recon[1:2068,]) # Data with imputed species means
-p_OU$anc_var[1:2068,] # Variances for each estimate
+View(p_OU$anc_recon)
+phy_bodysize <- as.data.frame(p_OU$anc_recon[1:1924,]) # Data with imputed species means
 
 # Join phylogenetic imputation in datase
-body_input <- as_tibble(cbind(body_size_input = phy_bodysize$`p_OU$anc_recon[1:2068, ]`, Species = rownames(phy_bodysize)))
+body_input <- as_tibble(cbind(body_size_input = phy_bodysize$`p_OU$anc_recon[1:1924, ]`, Species = rownames(phy_bodysize)))
 body_input$body_size_input <- as.numeric(body_input$body_size_input)
 
 # Join without NA's in body size
@@ -176,13 +176,14 @@ View(traits_input)
 
 # removing missing data in development mode and habitat
 visdat::vis_miss(traits_input)
-
-# We only 4.1% percent missing data
-# 3.42% habitat (fos,ter,aqu,arb)
-# 8.31% development
+View(traits_input)
+# We only 4.4% percent missing data
+# 3.53% habitat (fos,ter,aqu,arb)
+# 8.58% development
 
 traits_without_na <- remove_missing(traits_input, vars=names(traits_input))
-nrow(traits_without_na) # 1798 species with functional data
+nrow(traits_without_na) # 1736 species with functional data
+#we missing 188 spp
 
 # Wed Aug 24 15:10:03 2022 ------------------------------
 # functional metrics 
@@ -223,7 +224,7 @@ rownames(bodysize) <- traits_without_na$Species
 head(bodysize)
 
 # conferindo
-nrow(bodysize)
+nrow(bodysize)#1736
 nrow(habitat)
 nrow(development)
 
@@ -231,8 +232,7 @@ nrow(development)
 trait.dist <- dist.ktab(ktab.list.df(list(dist_habitat,dist_development, bodysize)), type = c("B","D","Q"), scan=TRUE)
 
 ?dist.ktab
-is.euclid(sqrt(trait.dist))
-
+is.euclid(trait.dist)
 #10 = S2 coefficient of GOWER & LEGENDRE for multi-choice traits
 #1 = Euclidean for quantitative traits
 
@@ -244,9 +244,12 @@ is.euclid(sqrt(trait.dist))
 list <- anti_join(traits_anura,traits_without_na, by="Species")
 
 list.remove <- list$Species
+
+dim(composition.select)
+
 #Removendo da composição (alteração do nome de . para _)
 composition_functional <- composition.select[,!(names(composition.select)%in% list.remove)]
-ncol(composition_functional) #1798
+dim(composition_functional) #1222 ilhas
 
 # identificando ilha com zero espécies
 teste <- cbind(id=composition$id, composition_functional)
@@ -257,8 +260,8 @@ rownames(teste) <- composition$id
 View(as.data.frame(rowSums(teste[,-1])))
 View(as.data.frame(rowSums(composition_functional))) # one community has 0 spp, because this in this functional analysis we removed more one community (island id 6938).
 
-composition_functional <- composition_functional[-720,]
-composition_id <- teste[-720,]
+composition_functional <- composition_functional[-665,]
+composition_id <- teste[-665,]
 View(composition_id)
 # Now, we calculating Functional Diversity metrics
 disp.func.amphibia <- fdisp(trait.dist, as.matrix(composition_functional),  tol = 1e-07)

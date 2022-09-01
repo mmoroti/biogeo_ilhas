@@ -33,31 +33,32 @@ View(batcomm$ab)
 # Sun Aug 14 11:00:01 2022 ------------------------------
 # using dataset without 'ilhas fluviais'
 dir()
-matrix_islands <- as_tibble(read.csv2("first_dataset/matrix_islands_ok.csv", sep=",", fileEncoding='UTF-8'))
+matrix_islands <- as_tibble(read.csv2("anura_islands_complete.csv", sep=","))
+View(matrix_islands)
 #removing name
-matrix_islands$name_ID <- gsub("\\_..*","",matrix_islands$name_ID)
+#matrix_islands$name_ID <- gsub("\\_..*","",matrix_islands$name_ID)
 
 ###
-head(matrix_islands) # 2329
-anura_islands_ok <- matrix_islands %>% select(-X, -name_ID)  
+ncol(matrix_islands) # 2179 columns
+anura_islands_ok <- matrix_islands %>% select(-X, -OBJECTID_1)  
 
 #check data
-head(matrix_islands) 
-head(anura_islands_ok) 
+head(anura_islands_ok) # 2177 spp
 
 # we use copy data without island id columns 
-nrow(anura_islands_ok) # 1499 islands 
-ncol(anura_islands_ok) # 2327 anuran islands spp.
+nrow(anura_islands_ok) # 1231 islands 
+ncol(anura_islands_ok) # 2177 anuran islands spp.
+# we remove 84 exotic spp 
 
 # traits data
 dir()
-anura_traits <- read.csv2("first_dataset/functional_anura.csv", sep=",") 
-names(anura_traits) 
-dim(anura_traits) #2249 spp and 34 traits
+anura_traits <- as_tibble(openxlsx::read.xlsx("anura_traits_raoni_2.xlsx")) %>% select(-X1,-X11,-X12)
+View(anura_traits) 
+dim(anura_traits) #2068 spp and 3 traits - body size, habitat and reproduction
 
 # selecting traits for our analysis
-traits <- c("Species", "Ter","Fos","Aqu","Arb", "Dir", "Lar", "Viv", "Body_size_mm")
-anura_traits_select <- anura_traits %>% select(traits)
+#traits <- c("Species", "Ter","Fos","Aqu","Arb", "Dir", "Lar", "Viv", "Body_size_mm")
+#anura_traits_select <- anura_traits %>% select(traits)
 
 # Thu Aug 11 12:05:59 2022 ------------------------------
 # Join trait data with community data
@@ -70,30 +71,32 @@ View(anura_islands_ok)
 anuran_list <- anura_islands_ok %>%
   gather(key="Species",value="count", Abavorana_luctuosa:Zhangixalus_yinggelingensis) %>% distinct(Species, .keep_all = TRUE)
 
-nrow(anuran_list) #2327 spp composition matrix
-nrow(anura_traits_select) # 2249 spp traits
-# 78 spp losing in composition matrix
+nrow(anuran_list) #2177 spp composition matrix
+nrow(anura_traits) # 2068 spp traits
+
+# 6 spp losing in composition matrix
 
 # Left join: espécies que estão no x mantidas e agrupa com os correspiondentes de y 
-anura_with_traits <- left_join(anuran_list, anura_traits_select, by="Species") %>% select(-count)
+anura_with_traits <- left_join(anuran_list, anura_traits, by="Species") %>% select(-count)
 vis_miss(anura_with_traits)
-# habitat use (ter, fos, aqu, arb) multi-choice traits with na's
-# breeding strategy (dir, lar, viv) choice trait - 10.89% missing data
-# litter_size_max continuous trait - 68% missing data.  
+# habitat use (ter, fos, aqu, arb) 14.75% missing data
+# breeding strategy (dir, lar, viv) choice trait - 19.2% missing data
+# body_size continuous trait - 22.55% missing data.  
 # View(anura_traits_select)
 
 # Anti join: espécies que estão no x, mas não estão no y (x,y)
-anura_without_traits <- anti_join(anuran_list, anura_traits_select, by="Species")
-nrow(anura_without_traits) # 247 spp.
+anura_without_traits <- anti_join(anuran_list, anura_traits, by="Species")
+nrow(anura_without_traits) # 253 spp.
 
 #Retirando espécies da comunidade que não estão nos traits
 rem.col.list <- anura_without_traits$Species
 short_anura_islands <- anura_islands_ok[,!(names(anura_islands_ok)%in% rem.col.list)]
-ncol(short_anura_islands) #2080 species with traits
+ncol(short_anura_islands) #1924 species with traits
 
 ###---
 # phylogenetic data 
-amphibia_phy <- read.tree("amph_shl_new_Consensus_7238.tre")
+
+amphibia_phy <- read.tree("first_dataset/amph_shl_new_Consensus_7238.tre")
 
 # we changed names in phylogeny for match to traits and composition matrix
 name_phy <- as_tibble(amphibia_phy$tip.label) %>% dplyr::mutate(new_name = amphibia_phy$tip.label)
@@ -123,11 +126,11 @@ match.phylo.comm(amphibia_phy,short_anura_islands)
 #Prune with phylogeny Pyron and Wiens consensus
 phy_anura_islands <- prune.sample(short_anura_islands, amphibia_phy) 
 
-phy_anura_islands # 2068 spp
+phy_anura_islands # 1924 spp
+head(short_anura_islands) #1924
 
-ncol(short_anura_islands) #2080
 #quantas espécies perdemos?
-2080-2068 # 12 spp
+#1924-1924 # 0 spp
 
 # Phylogeny anuran islands
 plot(phy_anura_islands, type="fan",show.tip.label = FALSE)
@@ -138,59 +141,84 @@ write.tree(phy_anura_islands, file = "anura_islands.tre")
 # "Anodonthyla_boulengeri","Megophrys_carinense" nomes inválidos segundo Frost
 
 # espécie duplicada na composição e nos traits  e litoria tyleri
-missing.in.phy <- c("Anodonthyla_boulengeri","Cornufer_guentheri","Cornufer_hedigeri","Cornufer_heffernani","Fejervarya_pulla","Megophrys_carinense","Nyctimystes_tyleri","Rhacophorus_rhyssocephalus","Sanguirana_mearnsi", "Sclerophrys_pentoni","Sclerophrys_tihamica","Trachycephalus_typhonius")
+#missing.in.phy <- c("Anodonthyla_boulengeri","Cornufer_guentheri","Cornufer_hedigeri","Cornufer_heffernani","Fejervarya_pulla","Megophrys_carinense","Nyctimystes_tyleri","Rhacophorus_rhyssocephalus","Sanguirana_mearnsi", "Sclerophrys_pentoni","Sclerophrys_tihamica","Trachycephalus_typhonius")
 
-phy_community_anura <- short_anura_islands[,!(names(short_anura_islands)%in% missing.in.phy)]
+#phy_community_anura <- short_anura_islands[,!(names(short_anura_islands)%in% missing.in.phy)]
 
 # Join lista da comunidade e filogenia com os traits
 # Arrumando para linhas
-anuran_list_phy <- phy_community_anura %>%
+anuran_list_phy <- short_anura_islands %>%
   gather(key="Species",value="count", Abavorana_luctuosa:Zhangixalus_viridis) %>% distinct(Species, .keep_all = TRUE)
-nrow(anuran_list_phy) #2068 spp composição de espécies
-nrow(anura_traits_select) # 2249 spp traits
+nrow(anuran_list_phy) #1924 spp composição de espécies
+nrow(anura_traits) # 2068 spp traits
 
 # Left join: espécies que estão no x mantidas e agrupa com os correspiondentes de y 
-phy_community_traits <- left_join(anuran_list_phy, anura_traits_select, by="Species") %>% select(-count)
+phy_community_traits <- left_join(anuran_list_phy, anura_traits, by="Species") %>% select(-count)
 vis_miss(anura_with_traits)
 
 #Data
-ncol(phy_community_anura) #2068 species community
-phy_anura_islands #2068 species phylogeny
-nrow(phy_community_traits) #2068 species traits
+ncol(short_anura_islands) #1924 species community
+phy_anura_islands #1924 species phylogeny
+nrow(phy_community_traits) #1924 species traits
 
 # Mon Aug 22 13:47:24 2022 ------------------------------
 # taking off offspring size and adding body size
 
 # traits raoni
-traits_anura_raoni <- openxlsx::read.xlsx("first_dataset/functional_traits_raoni.xlsx")
-names(traits_anura_raoni)
-traits_anura_raoni <- as_tibble(traits_anura_raoni) %>% select("Species","Body_size_mm", "Fos","Ter","Aqu","Arb", "Dir","Lar","Viv")
+#traits_anura_raoni <- openxlsx::read.xlsx("first_dataset/functional_traits_raoni.xlsx")
+#names(traits_anura_raoni)
+#traits_anura_raoni <- as_tibble(traits_anura_raoni) %>% select("Species","Body_size_mm", "Fos","Ter","Aqu","Arb", "Dir","Lar","Viv")
 
 # Join with list data
-traits_anura_islands <- left_join(anuran_list_phy, traits_anura_raoni, by="Species") %>% select(-count)
-vis_miss(traits_anura_islands)
+#traits_anura_islands <- left_join(anuran_list_phy, traits_anura_raoni, by="Species") %>% select(-count)
+#vis_miss(traits_anura_islands)
 
-# Saving traits data
+# Saving dataset
 write.csv2(phy_community_traits, "anura_islands_traits.csv", sep=",")
-write.csv2(phy_community_anura, "anura_islands_matrix.csv", sep=",")
-View(phy_community_anura)
-
-# Mon Aug 22 14:00:28 2022 ------------------------------
-# saving traits_anura_islands
-dir()
-write.csv2(traits_anura_islands, "anura_traits_raoni.csv", sep=",")
+write.csv2(short_anura_islands, "anura_islands_matrix.csv", sep=",")
 
 # Sun Aug 14 16:33:06 2022 ------------------------------
-community_with_id <- mutate(phy_community_anura,id = matrix_islands$name_ID,)
+community_with_id <- cbind(id = matrix_islands$OBJECTID_1, short_anura_islands)
+nrow(community_with_id)
 
 # islands without anurans
-index <- rowSums(phy_community_anura) #checking islands without anura spp
-View(as.data.frame(index))
+index <- rowSums(short_anura_islands) #checking islands without anura spp
+View(cbind(id = matrix_islands$OBJECTID_1,index))
 
 rem.lines <- c("17651", "18539", "18930", "22423", "3381", "3663", "5167", "9445")
 
 community_without_zero <- community_with_id[!(community_with_id$id %in% rem.lines), ]
 
 #Save
-View(community_without_zero)
+nrow(community_without_zero) #1223 islands with one or more anuran species
 write.csv2(community_without_zero, "anura_islands_without0.csv", sep=",")
+
+###
+# Thu Sep 01 08:22:52 2022 ------------------------------
+# new data dataset excluding: 2890,4491,5426
+# spp Leiopelma hochstetteri e Leiopelma archeyi - Ascaphus truei
+# islands without anurans
+rem.lines.ext <- c("17651", "18539", "18930", "22423", "3381", "3663", "5167", "9445","2890", "4491", "5426")
+2890,4491,5426
+community_without_ancestral <- community_with_id[!(community_with_id$id %in% rem.lines.ext), ]
+View(community_without_ancestral) #1220 islands
+
+# removing spp
+rem.col.ext <- c("Leiopelma_hochstetteri","Leiopelma_archeyi","Ascaphus_truei")
+anura_islands_without_ancestral <- community_without_ancestral[,!(names(community_without_ancestral)%in% rem.col.ext)]
+dim(anura_islands_without_ancestral)
+
+# islands without anurans
+index <- rowSums(anura_islands_without_ancestral) #checking islands without anura spp
+View(index)
+View(cbind(id =community_without_ancestral$id,index))
+
+#Prune with phylogeny without ancestral species
+phy_anura_islands_without_ancestral <- prune.sample(anura_islands_without_ancestral, amphibia_phy) 
+
+phy_anura_islands_without_ancestral # 1921 spp
+ncol(anura_islands_without_ancestral) # 1921 spp -1 column id 
+
+#save phy islands
+write.tree(phy_anura_islands_without_ancestral, file = "anura_islands_ancestral.tre")
+write.csv2(anura_islands_without_ancestral, "anura_islands_ancestral.csv", sep=",")

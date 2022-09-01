@@ -14,6 +14,7 @@ library(tidyverse)
 dir()
 composition <- as_tibble(read.csv2("anura_islands_without0.csv"))
 # put names in rows
+head(composition)
 composition.select <- composition %>% select(-X, -id)
 rownames(composition.select) <- as.character(composition$id) 
 View(composition.select)
@@ -69,18 +70,18 @@ shape <- cbind(shape,grids)
 #dir()
 
 # determing phyloregions with optimal number of clusters
-phyloregions <- phyloregion(beta_diversity[[1]], k = 19, method = "average")
-
+phyloregions <- phyloregion(beta_diversity[[1]], k = 18, method = "average")
+?phyloregion
 phyloregions$evol_distinct
 phyloregions$membership
 
 # with geospatial data
-phyloregions.shape <- phyloregion(beta_diversity[[1]], k = 19, method = "average", shp= shape) #coluna OBJECTID_1 tem os ids das 
+phyloregions.shape <- phyloregion(beta_diversity[[1]], k = 18, method = "average", shp= shape) #coluna OBJECTID_1 tem os ids das 
 
 plot_NMDS(phyloregions.shape, cex=6)
 text_NMDS(phyloregions.shape, cex=2)
 
-plot(phyloregions, shp=philly_sf_merged, cex=1, palette="NMDS")
+#plot(phyloregions, shp=philly_sf_merged, cex=1, palette="NMDS")
 
 # Join in spatial dataset attributes if the function phyloregion with shape doesn't work
 names(shape)
@@ -93,4 +94,5 @@ class(geo_data)
 # join full data
 geo_data_complete <- left_join(geo_data, phylo_evoldist, by = "cluster")
 #Save
-write.csv2(geo_data_complete, "evo_regions.csv", sep=",")
+write.table(geo_data_complete, "evo_regions.txt", sep=",")
+View(geo_data_complete)
