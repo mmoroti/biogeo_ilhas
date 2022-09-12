@@ -192,14 +192,14 @@ community_without_zero <- community_with_id[!(community_with_id$id %in% rem.line
 #Save
 nrow(community_without_zero) #1223 islands with one or more anuran species
 write.csv2(community_without_zero, "anura_islands_without0.csv", sep=",")
-
+View(community_without_zero[665,])
 ###
 # Thu Sep 01 08:22:52 2022 ------------------------------
 # new data dataset excluding: 2890,4491,5426
 # spp Leiopelma hochstetteri e Leiopelma archeyi - Ascaphus truei
 # islands without anurans
 rem.lines.ext <- c("17651", "18539", "18930", "22423", "3381", "3663", "5167", "9445","2890", "4491", "5426")
-2890,4491,5426
+
 community_without_ancestral <- community_with_id[!(community_with_id$id %in% rem.lines.ext), ]
 View(community_without_ancestral) #1220 islands
 

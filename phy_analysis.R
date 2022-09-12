@@ -12,19 +12,18 @@ library(tidyverse)
 # Loading data data
 # Composition matrix
 dir()
-composition <- as_tibble(read.csv2("anura_islands_without0.csv"))
+composition <- as_tibble(read.csv2("anura_islands_ancestral.csv"))
 # put names in rows
 head(composition)
 composition.select <- composition %>% select(-X, -id)
 rownames(composition.select) <- as.character(composition$id) 
-View(composition.select)
 
 # Traits
 #traits_anura <- read.csv2("anura_islands_traits.csv", sep=";")
 
 # Phylogeny
-phy_anura_islands <- ape::read.tree("anura_islands.tre")
-
+phy_anura_islands <- ape::read.tree("anura_islands_ancestral.tre")
+phy_anura_islands
 # Analysis of phylogenetic endemism and phyloregions 
 #Sparse community matrix - requirement from analysis of phyloregion package
 matrix_sparse_2 <- dense2sparse(composition.select)
@@ -39,6 +38,8 @@ write.table(pe, "phylogenetic_endemism.txt", sep=",")
 # Generating phylogenetic beta diversity
 beta_diversity <- phylobeta(matrix_sparse_2, phy_anura_islands,  index.family = "jaccard")
 
+?phylobeta
+
 # Cluster algorithm selection and validation
 y <- select_linkage(beta_diversity[[1]])
 barplot(y, horiz = TRUE, las = 1)
@@ -51,6 +52,7 @@ lines(d$df$k[order(d$df$k)], d$df$ev[order(d$df$k)], pch = 1)
 points(d$optimal$k, d$optimal$ev, pch = 21, bg = "red", cex = 2)
 points(d$optimal$k, d$optimal$ev, pch = 21, bg = "red", type = "h")
 
+d$optimal
 #?optimal_phyloregion
 #?plot.phyloregion
 
@@ -70,7 +72,7 @@ shape <- cbind(shape,grids)
 #dir()
 
 # determing phyloregions with optimal number of clusters
-phyloregions <- phyloregion(beta_diversity[[1]], k = 18, method = "average")
+phyloregions <- phyloregion(beta_diversity[[1]], k = 16, method = "average")
 ?phyloregion
 phyloregions$evol_distinct
 phyloregions$membership

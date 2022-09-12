@@ -277,3 +277,18 @@ View(FDis_metric_amphibia)
 # fdis
 dir()
 write.csv2(FDis_metric_amphibia, "fdis_islands.csv")
+
+# Thu Sep 01 18:04:25 2022 ------------------------------
+# Functional richness
+traits_teste <- traits_without_na
+rownames(traits_teste) <- traits_without_na$Species
+nrow(traits_teste)#1736
+
+teste_comp <- composition_id[,-1]
+View(teste_comp)
+
+ex3 <- dbFD(trait.dist, teste_comp)
+
+#grouping and save
+fric_index <- cbind(id=names(ex3$FRic),FRic=(ex3$FRic))
+write.csv2(fric_index, "fric_islands.csv")
