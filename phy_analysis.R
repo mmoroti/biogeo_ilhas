@@ -12,29 +12,38 @@ library(tidyverse)
 # Loading data data
 # Composition matrix
 dir()
-composition <- as_tibble(read.csv2("anura_islands_ancestral.csv"))
+composition <- as_tibble(read.csv2("reboucas_JBI_v2/anura_islands_matrix.csv"))[,-1]
 # put names in rows
 head(composition)
-composition.select <- composition %>% select(-X, -id)
-rownames(composition.select) <- as.character(composition$id) 
+#composition.select <- composition %>% select(-X, -id)
+rownames(composition) <- as.character(matrix_islands$OBJECTID_1) 
 
 # Traits
 #traits_anura <- read.csv2("anura_islands_traits.csv", sep=";")
 
 # Phylogeny
-phy_anura_islands <- ape::read.tree("anura_islands_ancestral.tre")
+phy_anura_islands <- ape::read.tree("reboucas_JBI_v2/anura_islands_phy.tre")
 phy_anura_islands
 # Analysis of phylogenetic endemism and phyloregions 
 #Sparse community matrix - requirement from analysis of phyloregion package
-matrix_sparse_2 <- dense2sparse(composition.select)
+matrix_sparse_2 <- dense2sparse(composition)
 
 # Takes a community data table and a (rooted) phylogenetic tree (with branch lengths) and calculates either strict or weighted endemism in Phylogenetic Diversity (PD). Strict endemism equates to the total amount of branch length found only in the sample/s and is described by Faith et al. (2004) as PD-endemism. Weighted endemism calculates the "spatial uniqueness" of each branch in the tree by taking the reciprocal of its range, multiplying by branch length and summing for all branch lengths present at a sample/site. Range is calculated simply as the total number of samples/sites at which the branch is present. This latter approach is described by Rosauer et al. (2009) as Phylogenetic endemism.
 # phylo_endemism
 pe <- phylo_endemism(matrix_sparse_2, phy_anura_islands)
 head(pe)
 # saving phylo_endemism values per islands
-write.table(pe, "phylogenetic_endemism.txt", sep=",")
+write.table(pe, "reboucas_JBI_v2/phylogenetic_endemism.txt", sep=",", row.names =T, col.names = FALSE)
 
+###------------------------------------------------------------------------------------------------------------------------------------
+###------------------------------------------------------------------------------------------------------------------------------------
+###------------Essa parte abaixo não foi explorada em Rebouças et al., Journal of Biogeography-----------------------------------------
+###------------------------------------------------------------------------------------------------------------------------------------
+###------------------------------------------------------------------------------------------------------------------------------------
+###------------------------------------------------------------------------------------------------------------------------------------
+# 
+# Mon May 22 19:32:15 2023 ------------------------------
+# biogeoregionalização
 # Generating phylogenetic beta diversity
 beta_diversity <- phylobeta(matrix_sparse_2, phy_anura_islands,  index.family = "jaccard")
 

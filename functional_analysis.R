@@ -88,19 +88,21 @@ library(geiger)
 # loading data
 #Composition data
 dir()
-composition <- as_tibble(read.csv2("anura_islands_without0.csv"))
+composition <- as_tibble(read.csv2("reboucas_JBI_v2/anura_islands_without0.csv"))
 # put names in rows
 #View(composition)
-composition.select <- composition %>% select(-X, -id)
+composition.select <- composition %>% select(-X)
 rownames(composition.select) <- as.character(composition$id) 
-View(as.data.frame(rowSums(composition.select)))
+composition.select <- composition %>% select(-id)
+
+# View(as.data.frame(rowSums(composition.select)))
 # phylogeny
-phy_anura_islands <- ape::read.tree("anura_islands.tre")
-phy_anura_islands #1986
+phy_anura_islands <- ape::read.tree("reboucas_JBI_v2/anura_islands_phy.tre")
+phy_anura_islands #1924
 
 # traits 
 dir()
-traits_anura <- as_tibble(read.csv2("anura_islands_traits.csv")) %>% select(-X)
+traits_anura <- as_tibble(read.csv2("reboucas_JBI_v2/anura_islands_traits.csv")) %>% select(-X)
 visdat::vis_miss(traits_anura)
 nrow(traits_anura)
 
@@ -117,7 +119,8 @@ nrow(body_size_to_input)
 
 # We need to remove NA's to do the selection for best fit model of trait evolution
 body_size_withoutna <- remove_missing(body_size, vars="Body_size_mm") #238 spp removed
-View(body_size_withoutna) #1686
+View(body_size_withoutna) #1688
+
 # preparing dataset
 body_size_without_rownames <- body_size_withoutna %>% select(-species)
 rownames(body_size_without_rownames) <- body_size_withoutna$species 
@@ -126,12 +129,12 @@ View(body_size_without_rownames)
 # Colnames with species ID - This proceding is necessary for prune.sample function
 body_amphi_trans <- t(body_size_without_rownames)
 #colnames(body_amphi_trans) <- body_amphi_trans[1,] 
-View(body_amphi_trans)
+#View(body_amphi_trans)
 ncol(body_amphi_trans)
 # prune sample with phylogeny
 phy_body <- prune.sample(body_amphi_trans,phy_anura_islands)
 phy_body # 1686 tips
-nrow(body_size_without_rownames) #1686 spp
+nrow(body_size_without_rownames) #1688 spp
 
 # Aqui inicia o processo de seleção de modelos evolutivos para os atributos, precisamos usar os dados sem NA's depois fazemos a imputação. 
 # Calculing the best fit evolution model
@@ -232,7 +235,7 @@ nrow(development)
 trait.dist <- dist.ktab(ktab.list.df(list(dist_habitat,dist_development, bodysize)), type = c("B","D","Q"), scan=TRUE)
 
 ?dist.ktab
-is.euclid(trait.dist)
+is.euclid(sqrt(trait.dist))
 #10 = S2 coefficient of GOWER & LEGENDRE for multi-choice traits
 #1 = Euclidean for quantitative traits
 
@@ -249,7 +252,7 @@ dim(composition.select)
 
 #Removendo da composição (alteração do nome de . para _)
 composition_functional <- composition.select[,!(names(composition.select)%in% list.remove)]
-dim(composition_functional) #1222 ilhas
+dim(composition_functional) #1227 ilhas
 
 # identificando ilha com zero espécies
 teste <- cbind(id=composition$id, composition_functional)
@@ -257,14 +260,18 @@ View(teste)
 rownames(teste) <- composition$id
 
 # check match
-View(as.data.frame(rowSums(teste[,-1])))
-View(as.data.frame(rowSums(composition_functional))) # one community has 0 spp, because this in this functional analysis we removed more one community (island id 6938).
+View()
 
-composition_functional <- composition_functional[-665,]
-composition_id <- teste[-665,]
-View(composition_id)
+View(as.data.frame(rowSums(teste[,-c(1:2)])))
+View(as.data.frame(rowSums(composition_functional[,-c(1:2)]))) # one community has 0 spp, because this in this functional analysis we removed more one community (island id 6938).
+
+composition_functional <- composition_functional[-666,]
+composition_id <- teste[-668,]
+View(composition_functional)
+View(teste)
+
 # Now, we calculating Functional Diversity metrics
-disp.func.amphibia <- fdisp(trait.dist, as.matrix(composition_functional),  tol = 1e-07)
+disp.func.amphibia <- fdisp(trait.dist, as.matrix(composition_functional[,-1]),  tol = 1e-07)
 disp.func.amphibia
 
 # Histograma
@@ -276,7 +283,7 @@ FDis_metric_amphibia <- data.frame(id=composition_id$id, FDis=disp.func.amphibia
 View(FDis_metric_amphibia)
 # fdis
 dir()
-write.csv2(FDis_metric_amphibia, "fdis_islands.csv")
+write.table(FDis_metric_amphibia, "reboucas_JBI_v2/fdis_islands.txt", row.names=F)
 
 # Thu Sep 01 18:04:25 2022 ------------------------------
 # Functional richness

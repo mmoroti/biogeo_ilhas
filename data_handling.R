@@ -10,18 +10,18 @@ library(picante) #checking phylogeny name
 library(visdat) #check missing data
 
 # exploring 'adiv' package
-data(batcomm)
-batcomm$ab
-batcomm$ab2
-batcomm$tre
-
-data(batcomm)
-abgdivparam(batcomm$ab)
-plot(abgdivparam(batcomm$ab))
-
-abgdivparam(batcomm$ab, q=0:4)
-plot(abgdivparam(batcomm$ab, q=0:4))
-View(batcomm$ab)
+#data(batcomm)
+#batcomm$ab
+#batcomm$ab2
+#batcomm$tre
+#
+#data(batcomm)
+#abgdivparam(batcomm$ab)
+#plot(abgdivparam(batcomm$ab))
+#
+#abgdivparam(batcomm$ab, q=0:4)
+#plot(abgdivparam(batcomm$ab, q=0:4))
+#View(batcomm$ab)
 
 # Herein, we preparing data 
 # community data 
@@ -33,26 +33,26 @@ View(batcomm$ab)
 # Sun Aug 14 11:00:01 2022 ------------------------------
 # using dataset without 'ilhas fluviais'
 dir()
-matrix_islands <- as_tibble(read.csv2("anura_islands_complete.csv", sep=","))
+matrix_islands <- as_tibble(read.csv2("reboucas_JBI_v2/Community matrix.csv", sep=","))[,-1]
 View(matrix_islands)
 #removing name
 #matrix_islands$name_ID <- gsub("\\_..*","",matrix_islands$name_ID)
 
 ###
-ncol(matrix_islands) # 2179 columns
-anura_islands_ok <- matrix_islands %>% select(-X, -OBJECTID_1)  
+ncol(matrix_islands) # 2178 columns
+anura_islands_ok <- matrix_islands %>% select(-OBJECTID_1)  
 
 #check data
 head(anura_islands_ok) # 2177 spp
 
 # we use copy data without island id columns 
-nrow(anura_islands_ok) # 1231 islands 
+nrow(anura_islands_ok) # 1233 islands 
 ncol(anura_islands_ok) # 2177 anuran islands spp.
 # we remove 84 exotic spp 
 
 # traits data
 dir()
-anura_traits <- as_tibble(openxlsx::read.xlsx("anura_traits_raoni_2.xlsx")) %>% select(-X1,-X11,-X12)
+anura_traits <- as_tibble(openxlsx::read.xlsx("reboucas_JBI_v2/anura_traits_raoni_2.xlsx")) %>% select(-X1,-X11,-X12)
 View(anura_traits) 
 dim(anura_traits) #2068 spp and 3 traits - body size, habitat and reproduction
 
@@ -66,7 +66,7 @@ dim(anura_traits) #2068 spp and 3 traits - body size, habitat and reproduction
 #Conferindo quais espécies da lista possuem traits
 # Lista para join
 # Arrumando para linhas
-View(anura_islands_ok)
+# View(anura_islands_ok)
 
 anuran_list <- anura_islands_ok %>%
   gather(key="Species",value="count", Abavorana_luctuosa:Zhangixalus_yinggelingensis) %>% distinct(Species, .keep_all = TRUE)
@@ -96,7 +96,7 @@ ncol(short_anura_islands) #1924 species with traits
 ###---
 # phylogenetic data 
 
-amphibia_phy <- read.tree("first_dataset/amph_shl_new_Consensus_7238.tre")
+amphibia_phy <- read.tree("reboucas_JBI_v2/amph_shl_new_Consensus_7238.tre")
 
 # we changed names in phylogeny for match to traits and composition matrix
 name_phy <- as_tibble(amphibia_phy$tip.label) %>% dplyr::mutate(new_name = amphibia_phy$tip.label)
@@ -174,9 +174,11 @@ nrow(phy_community_traits) #1924 species traits
 #vis_miss(traits_anura_islands)
 
 # Saving dataset
-write.csv2(phy_community_traits, "anura_islands_traits.csv", sep=",")
-write.csv2(short_anura_islands, "anura_islands_matrix.csv", sep=",")
+write.csv2(phy_community_traits, "reboucas_JBI_v2/anura_islands_traits.csv", sep=",")
+write.csv2(short_anura_islands, "reboucas_JBI_v2/anura_islands_matrix.csv", sep=",")
+write.tree(phy_anura_islands, "reboucas_JBI_v2/anura_islands_phy.tre")
 
+vis_miss(phy_community_traits)
 # Sun Aug 14 16:33:06 2022 ------------------------------
 community_with_id <- cbind(id = matrix_islands$OBJECTID_1, short_anura_islands)
 nrow(community_with_id)
@@ -185,13 +187,13 @@ nrow(community_with_id)
 index <- rowSums(short_anura_islands) #checking islands without anura spp
 View(cbind(id = matrix_islands$OBJECTID_1,index))
 
-rem.lines <- c("17651", "18539", "18930", "22423", "3381", "3663", "5167", "9445")
+rem.lines <- c("18539", "18930", "22423", "3381", "5167", "9445")
 
 community_without_zero <- community_with_id[!(community_with_id$id %in% rem.lines), ]
 
 #Save
-nrow(community_without_zero) #1223 islands with one or more anuran species
-write.csv2(community_without_zero, "anura_islands_without0.csv", sep=",")
+nrow(community_without_zero) #1227 islands with one or more anuran species
+write.csv2(community_without_zero, "reboucas_JBI_v2/anura_islands_without0.csv", sep=",")
 View(community_without_zero[665,])
 ###
 # Thu Sep 01 08:22:52 2022 ------------------------------
