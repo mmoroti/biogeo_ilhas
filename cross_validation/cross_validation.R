@@ -242,10 +242,11 @@ join_fdis <- inner_join(FDis_gbif,
                         by = "id")
 
 # plot phylogenetic diversity 
-ggplot(join_fdis, aes(x = log(FDis_gbif), y = log(FDis_iucn))) +
+plot_fdis <- ggplot(join_fdis, aes(x = log(FDis_gbif), y = log(FDis_iucn))) +
   geom_point(color = "blue") +
   geom_smooth(method = "lm", col = "red") +
   labs(title = "Functional diversity (FDis)", x = "GBIF", y = "IUCN") +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "black") +
   theme_minimal()
 
 cor(join_fdis$FDis_gbif, join_fdis$FDis_iucn, method = "pearson")
@@ -259,6 +260,7 @@ ggplot(df_sem_zero, aes(x = log(FDis_gbif), y = log(FDis_iucn))) +
   geom_point(color = "blue") +
   geom_smooth(method = "lm", col = "red") +
   labs(title = "Functional diversity (FDis)", x = "GBIF", y = "IUCN") +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "black") +
   theme_minimal()
 cor(df_sem_zero$FDis_gbif, df_sem_zero$FDis_iucn, method = "pearson")
 
@@ -323,9 +325,10 @@ join <- left_join(pe_gbif,
 head(join)
 
 # plot phylogenetic diversity 
-ggplot(join, aes(x = log(pe_gbif), y = log(pe_iucn))) +
+plot_phylo <- ggplot(join, aes(x = log(pe_gbif), y = log(pe_iucn))) +
   geom_point(color = "blue") +
   geom_smooth(method = "lm", col = "red") +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "black") +
   labs(title = "Phylogenetic endemism (PE)", x = "GBIF", y = "IUCN") +
   theme_minimal()
 
@@ -343,10 +346,13 @@ join_rich <- left_join(richness_gbif,
                        by="ID")
 head(join_rich)
 
-ggplot(join_rich, aes(x = log(rich_gbif), y = log(rich_iucn))) +
+plot_rich<- ggplot(join_rich, aes(x = log(rich_gbif), y = log(rich_iucn))) +
   geom_point(color = "blue") +
   geom_smooth(method = "lm", col = "red") +
   labs(title = "Species richness", x = "GBIF", y = "IUCN") +
-  theme_minimal()
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "black") +
+  theme_minimal() 
 
 cor(join_rich$rich_gbif, join_rich$rich_iucn, method = "pearson")
+
+cowplot::plot_grid(plot_rich, plot_fdis, plot_phylo, ncol=3)
