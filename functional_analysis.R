@@ -34,9 +34,9 @@ polygons_data <- as_tibble(read.csv2(
             "anura_islands_without0.csv"), header = TRUE, sep = ";"))[,-1]
 
 # Community point of occurences data from GBIF
-occurences_data <- read_delim(
-  file.path(local_directory, "biogeo_islands",
-            "data_gbif.csv"), delim = ",")[,-1]
+#occurences_data <- read_delim(
+#  file.path(local_directory, "biogeo_islands",
+#            "data_gbif.csv"), delim = ",")[,-1]
 
 # Species list Tropical and Temperate domains
 amphibians_world <- as_tibble(
@@ -113,6 +113,7 @@ list_gbif_key <- list_gbif %>%
   left_join(list_species_gbif_key, by = c("species" = "verbatim_name")) %>%
   select(species, speciesKey) 
 
+any(is.na(list_gbif_key))
 ### Communities (Polygons) ----
 # vamos selecionar apenas os specieskey nao repetidos
 # According Frost, 2025, these 3 duplicates speciesKey are synonyms of each other
@@ -198,8 +199,14 @@ community_adj_names <- bind_rows(
   duplicates
 ) %>%
   select(names_phy, names_community) %>%
-  remove_missing() %>% # sp nao encontradas nas arvores
+  remove_missing() %>% # 3 spp nao encontradas nas arvores
   deframe()
+
+community_adj_matrix <- bind_rows(
+  rename_cols,
+  duplicates
+) %>%
+  arrange(names_phy) # 3 spp nao encontradas nas arvores
 
 # ok
 # 1918 nomes identificados na arvore, representacao de quase 99%
@@ -209,20 +216,20 @@ remove_species <- c("Bijurana_nicobariensis",
                     "Lithobates_palustris")
 
 # Unifying synonyms 
-polygons_data$Chalcorana_crassiovis <- pmax(community_data$Chalcorana_kampeni,
-                                            community_data$Chalcorana_crassiovis)
+polygons_data$Chalcorana_crassiovis <- pmax(polygons_data$Chalcorana_kampeni,
+                                            polygons_data$Chalcorana_crassiovis)
 
-polygons_data$Nyctimystes_disruptus <- pmax(community_data$Nyctimystes_oktediensis,
-                                            community_data$Nyctimystes_disruptus)
+polygons_data$Nyctimystes_disruptus <- pmax(polygons_data$Nyctimystes_oktediensis,
+                                            polygons_data$Nyctimystes_disruptus)
 
-polygons_data$Peltophryne_guentheri <- pmax(community_data$Peltophryne_fracta,
-                                            community_data$Peltophryne_guentheri)
+polygons_data$Peltophryne_guentheri <- pmax(polygons_data$Peltophryne_fracta,
+                                            polygons_data$Peltophryne_guentheri)
 
 polygons_adj <- polygons_data %>%
   select(-all_of(c(synonyms, remove_species))) %>%
   rename(all_of(community_adj_names)) 
 
-# ncol(polygons_adj) # 1918 
+# ncol(polygons_adj) # 1918 spp + 1 coluna id
 
 ### Communities (Points of occurence) ---- 
 # Unifying GBIF and Traits
@@ -231,6 +238,10 @@ list_gbif_phy <- left_join(list_gbif_key,
                            by = 'speciesKey') %>%
   remove_missing() # 76 spp sem posicao na filogenia e sem traits
 
+# identify species in dataset and phylogeny, using respective name in phylogeny
+#list_gbif_phy %>%
+#  filter(duplicated(speciesKey) | duplicated(speciesKey, fromLast = TRUE)) %>%
+#  View() 
 synonyms_gbif <- c("Hyla_japonica",
                    "Bufo_gargarizans",
                    "Platymantis_guentheri",
@@ -257,10 +268,6 @@ synonyms_gbif <- c("Hyla_japonica",
                    "Sphaenorhynchus_platycephalus",
                    "Hylarana_nigrovittata",
                    "Pedostibes_everetti")
-
-list_gbif_phy %>%
-  filter(duplicated(speciesKey) | duplicated(speciesKey, fromLast = TRUE)) %>%
-  View()
 
 # retirar duplicatas
 rename_cols <- list_gbif_phy %>%
@@ -390,7 +397,7 @@ without_duplicates <- amphibians_world %>%
 names_islands_dup <- names_islands_adj %>%
   distinct() 
 
-View(names_islands_dup)
+#View(names_islands_dup)
 
 # identificando as especies pelo speciesKey
 species_climate_islands <- left_join(
@@ -398,35 +405,34 @@ species_climate_islands <- left_join(
   without_duplicates, by = c("Species" = "binomial"))
 
 # identificando quais especies estao em cada lugar
-communities_islands <- left_join(community_adj_names,
+communities_islands <- left_join(community_adj_matrix,
                                  species_climate_islands, by = "speciesKey") %>%
   select(names_phy, climate) 
 
-# adicionando informacao da posicao da filha para as especies com traits
+# adicionando informacao da posicao da ilha para as especies com traits
 # 1918 spp. Mas algumas ocorrem nos dois lugares, por isso o left_join ira
 # duplicar algumas especies
-trait_list <- data.frame(Species = row.names(amp_islands_traits))
 
-species_per_islands <- left_join(trait_list,
-                                 communities_islands, by = c("Species" = "names_phy"))
+species_per_islands <- left_join(community_adj_matrix,
+                                 communities_islands, by = "names_phy")
 
 # algumas especies tem nos dois (temperada e tropical)
 #species_per_islands %>%
 #  distinct(Species, .keep_all = TRUE) %>% View()
 
 species_per_islands_unique <-species_per_islands %>%
-  filter(!duplicated(Species) & !duplicated(Species, fromLast = TRUE)) 
+  filter(!duplicated(names_phy) & !duplicated(names_phy, fromLast = TRUE)) 
 
 species_per_islands_both <- species_per_islands %>%
-  filter(duplicated(Species) | duplicated(Species, fromLast = TRUE)) %>%
+  filter(duplicated(names_phy) | duplicated(names_phy, fromLast = TRUE)) %>%
   mutate(climate = "both") %>%
-  distinct(Species, .keep_all = TRUE)
+  distinct(names_phy, .keep_all = TRUE)
 
 species_per_islands_classified <- bind_rows(
   species_per_islands_unique,
   species_per_islands_both
-)
-
+) %>%
+  filter(!names_community %in% remove_species)
 
 # Metrics ----
 ### Obtain phylogenetic diversity ----
@@ -528,17 +534,17 @@ trait_distance_gawdis_pcoa <- capscale(gaw.anura ~ 1,
                                        amp_islands_traits,
                                        distance = "gower")
 
-# Autovalores (importância de cada eixo)
+# Autovalores (importancia de cada eixo)
 eigenvalues <- trait_distance_gawdis_pcoa$CA$eig
-
 # Percentual de variância explicada por eixo
 variance_explained <- eigenvalues / sum(eigenvalues)
-
 # Coordenadas dos pontos nos eixos principais
 ordination_scores <- scores(trait_distance_gawdis_pcoa, display = "sites")
 
 # Calculando correlação entre os traços e os eixos da PCoA
-trait_correlation <- cor(amp_islands_traits, ordination_scores, use = "pairwise.complete.obs")
+trait_correlation <- cor(amp_islands_traits,
+                         ordination_scores,
+                         use = "pairwise.complete.obs")
 print(trait_correlation)
 
 
@@ -583,18 +589,18 @@ trait_space_climate <- funspace(
   n_divisions=1000) 
 
 # funspace per islands
-plot(x=trait_space_climate, # funspace object
-     type="groups", # plot the global TPD
-     which.group = "temperate",
-     quant.plot=TRUE, # add quantile lines
-     arrows=TRUE, # add arrows for PCA loadings
-     arrows.length=0.9,
-     globalContour = T,
-     pnt = T,
-     pnt.col = rgb(0.8, 0.7, 0.1, alpha = 0.2),
-     axis.title.x = "Development mode (26.46%)",
-     axis.title.y = "Circadian Activity (22.01%)")
-plot(fit, add = TRUE, col = 'black')
+#plot(x=trait_space_climate, # funspace object
+#     type="groups", # plot the global TPD
+#     which.group = "temperate",
+#     quant.plot=TRUE, # add quantile lines
+#     arrows=TRUE, # add arrows for PCA loadings
+#     arrows.length=0.9,
+#     globalContour = T,
+#     pnt = T,
+#     pnt.col = rgb(0.8, 0.7, 0.1, alpha = 0.2),
+#     axis.title.x = "Development mode (26.46%)",
+#     axis.title.y = "Circadian Activity (22.01%)")
+#plot(fit, add = TRUE, col = 'black')
 
 ### 
 tiff("global_funspace.tiff", width = 1700, height = 1700, res = 300)
@@ -679,18 +685,18 @@ amp_gbif_community <- matrix_gbif_renamed %>%
   select(-all_of(remove))
 
 #### Evolutionary distincteness (Phylogenetic endemism) ----
-gbif_phy <- prune.sample(amp_gbif_community, amphibia_tree) 
+gbif_phy <- prune.sample(matrix_gbif_renamed, amphibia_tree) 
 # alguma comunidade com zero?
-any(rowSums(amp_gbif_community) == 0)
+any(rowSums(matrix_gbif_renamed) == 0)
 # Analysis of phylogenetic endemism and phyloregions 
 #Sparse community matrix - requirement from analysis of phyloregion package
-matrix_sparse_gbif <- dense2sparse(amp_gbif_community)
+matrix_sparse_gbif <- dense2sparse(matrix_gbif_renamed)
 # phylo_endemism
 pe_gbif <- phylo_endemism(matrix_sparse_gbif, gbif_phy)
 # View(data.frame(pe_gbif))
 
 ### Functional diversity (Functional dispersion) ---- 
-list_gbif_renamed <- data.frame('Scientific.Name' = names(amp_gbif_community))
+list_gbif_renamed <- data.frame('Scientific.Name' = names(matrix_gbif_renamed))
 
 tetrapod_traits_adj <- tetrapod_traits_select %>%
   mutate(Scientific.Name = gsub(" ", "_", Scientific.Name))  
@@ -705,8 +711,9 @@ amp_list_traits <- amp_islands_traits_complete %>%
 amphibia_gbif_traits_tofill <- amphibia_gbif_traits %>%
   left_join(amp_list_traits, by = "Scientific.Name")
 
-write.csv2(amphibia_gbif_traits_tofill, "amphibia_gbif_traits_tofill.csv" )
-
+# To fill
+# write.csv2(amphibia_gbif_traits_tofill, "amphibia_gbif_traits_tofill.csv" )
+# To load
 # Functional dispersion
 amp_gbis_traits_complete <- read.csv2(
   file.path(local_directory, "biogeo_islands",
@@ -721,23 +728,39 @@ nrow(amp_gbis_traits_complete) # 1494
 ncol(matrix_gbif_renamed) # 1494 especies
 
 amp_gbif_traits <- amp_gbis_traits_complete %>%
-  filter(!Scientific.Name %in% remove) %>%
+  #filter(!Scientific.Name %in% remove) %>%
   arrange(Scientific.Name) %>%
   column_to_rownames("Scientific.Name")
 
-nrow(amp_gbif_traits) # 1492
-ncol(amp_gbif_community) # 1492 especies
+nrow(amp_gbif_traits) # 1494
+ncol(matrix_gbif_renamed) # 1494 especies
+
+
+# Species not present in any islands
+which(colSums(matrix_gbif_renamed) == 0)
+
+species_remove <- c("Duttaphrynus_dhufarensis",
+                    "Nannophryne_variegata") 
+
+# Without zero
+matrix_gbif_renamed_without_zero <- matrix_gbif_renamed %>%
+  select(-all_of(species_remove)) 
+
+amp_gbif_traits_without_zero <- amp_gbif_traits %>%
+  rownames_to_column(var = "name") %>%
+  filter(!name %in% species_remove) %>%
+  column_to_rownames("name")
 
 # fazer a matriz de distancia
 # gawdis distance
-gaw.anura.gbif <-gawdis(amp_gbif_traits,
+gaw.anura.gbif <-gawdis(amp_gbif_traits_without_zero,
                         w.type="analytic",
                         groups = c(1,
                                    2,2,
                                    3,3,3,3,
                                    4,4,4))
 # Community matrix
-gbif_community <- amp_gbif_community %>%
+gbif_community <- matrix_gbif_renamed_without_zero %>%
   select(sort(names(.))) %>%
   as.matrix()
 
@@ -773,8 +796,8 @@ cor(
 )
 # Phylogenetic endemism
 cor(
-  log(diversity_islands_cor$PhyEnd),
-  log(diversity_islands_cor$PhyEnd_GBIF),
+  log(diversity_islands_cor$PhyEnd+1),
+  log(diversity_islands_cor$PhyEnd_GBIF+1),
   method = "pearson"
 ) 
 # Richness
@@ -837,24 +860,24 @@ write.csv2(diversity_gbif, file.path(local_directory, "biogeo_islands",
 
 # Exploring results ----
 getwd() # pasta que ira salvar as imagens
-ggplot(diversity_polygons, aes(x = FRich, y = log(Richness))) +
-  geom_point(size = 3, color = "blue") +  # Pontos azuis
-  geom_smooth(method = "lm", se = TRUE, color = "red", fill = "pink") + # Linha de regressão
-  labs(x = "FRich", y = "Log(Richness)") +
-  theme_minimal() 
+#ggplot(diversity_polygons, aes(x = FRich, y = log(Richness))) +
+#  geom_point(size = 3, color = "blue") +  # Pontos azuis
+#  geom_smooth(method = "lm", se = TRUE, color = "red", fill = "pink") + # Linha de regressão
+#  labs(x = "FRich", y = "Log(Richness)") +
+#  theme_minimal() 
 
-diversity_test <- diversity_polygons %>%
-  remove_missing()
+#diversity_test <- diversity_polygons %>%
+#  remove_missing()
 
-cor(log(diversity_test$FRich),
-    log(diversity_test$Richness), method = "pearson") # 0.75 correlacionadas
+#cor(log(diversity_test$FRich),
+#    log(diversity_test$Richness), method = "pearson") # 0.75 correlacionadas
 
-ggplot(diversity_test, aes(x = log10(FRich), y = log10(Richness))) +
-  geom_point(alpha = 0.6) +
-  geom_smooth(method = "loess", col = "blue") +
-  labs(title = "",
-       x = "Functional Richness", y = "Species richness") +
-  theme_minimal() 
+#ggplot(diversity_test, aes(x = log10(FRich), y = log10(Richness))) +
+#  geom_point(alpha = 0.6) +
+#  geom_smooth(method = "loess", col = "blue") +
+#  labs(title = "",
+#       x = "Functional Richness", y = "Species richness") +
+#  theme_minimal() 
 
 # Cross-validation
 # transform and plot data correlation
